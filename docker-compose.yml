@@ -1,0 +1,92 @@
+version: "3"
+networks:
+    redprincipal:
+        driver: bridge
+
+services:
+    db:
+        image: mysql:5.7
+        container_name: miproyecto-mysql
+        tty: true
+        ports:
+            - "4208:3306"
+        volumes:
+            - "db_data:/var/lib/mysql"
+        environment:
+            MYSQL_ROOT_PASSWORD: Bateria
+            MYSQL_DATABASE: wordpress
+            MYSQL_USER: cesar
+            MYSQL_PASSWORD: Bateria
+        networks:
+            - redprincipal
+
+    server:
+        image: wordpress:latest
+        container_name: miproyecto-wordpress-6.1.1
+        ports:
+            - "4282:80"
+        volumes:
+            - "./var/www/html/:/var/www/html"
+        environment:
+            WORDPRESS_DB_USER: cesar
+            WORDPRESS_DB_PASSWORD: Bateria
+            WORDPRESS_DB_NAME: wordpress
+            WORDPRESS_DB_HOST: miproyecto-mysql
+        depends_on:
+            - db
+        networks:
+            - redprincipal
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        container_name: miproyecto-phpmyadmin
+        ports:
+            - "4283:80"
+        environment:
+            PMA_HOST: miproyecto-mysql
+            MYSQL_ROOT_PASSWORD: Bateria    
+        depends_on:
+            - db
+        networks:
+            - redprincipal
+
+    wordpress1:
+        image: wordpress:latest
+        container_name: wordpress1
+        depends_on:
+            - db
+        environment:
+            WORDPRESS_DB_HOST: db
+            WORDPRESS_DB_USER: cesar
+            WORDPRESS_DB_PASSWORD: Bateria
+            WORDPRESS_DB_NAME: wordpress
+        networks:
+            - redprincipal
+    
+    wordpress2:
+        image: wordpress:latest
+        container_name: wordpress2
+        depends_on:
+            - db
+        environment:
+            WORDPRESS_DB_HOST: db
+            WORDPRESS_DB_USER: cesar
+            WORDPRESS_DB_PASSWORD: Bateria
+            WORDPRESS_DB_NAME: wordpress
+        networks:
+            - redprincipal
+
+    nginx:
+        image: nginx:latest
+        ports:
+            - "80:80"
+        volumes:
+            - ./nginx.conf:/etc/nginx/nginx.conf
+        depends_on:
+            - wordpress1
+            - wordpress2
+        networks:
+            - redprincipal
+
+volumes:
+  db_data:
